@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clasificador NIIF · Agrupasalud IPS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal:    #028090;
+    --sea:     #00A896;
+    --mint:    #02C39A;
+    --dark:    #0D2B35;
+    --mid:     #1A4A58;
+    --light:   #E8F6F8;
+    --white:   #FFFFFF;
+    --red:     #E63946;
+    --gold:    #F4A261;
+    --g1:      #2D6A4F;
+    --g2:      #028090;
+    --g3:      #6D6875;
+    --shadow:  0 4px 24px rgba(13,43,53,0.13);
+    --radius:  14px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--dark);
+    min-height: 100vh;
+    color: var(--white);
+    overflow-x: hidden;
+  }
+
+  /* ── Background mesh ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 10% 20%, rgba(2,128,144,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 60% at 90% 80%, rgba(2,195,154,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .wrapper {
+    position: relative; z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    margin-bottom: 2.8rem;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(2,168,150,0.18);
+    border: 1px solid rgba(2,168,150,0.4);
+    color: var(--mint);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.35rem 1rem;
+    border-radius: 100px;
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.9rem, 5vw, 2.8rem);
+    line-height: 1.15;
+    color: var(--white);
+    margin-bottom: 0.6rem;
+  }
+
+  h1 em { color: var(--mint); font-style: italic; }
+
+  .subtitle {
+    color: rgba(255,255,255,0.55);
+    font-size: 0.9rem;
+    font-weight: 300;
+  }
+
+  /* ── Progress bar ── */
+  .progress-wrap {
+    background: rgba(255,255,255,0.07);
+    border-radius: 100px;
+    height: 4px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+    animation: fadeUp 0.5s 0.3s ease both;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--mint));
+    border-radius: 100px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  .step-label {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.4);
+    text-align: right;
+    margin-top: 0.4rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: var(--radius);
+    padding: 2rem 2.2rem;
+    backdrop-filter: blur(10px);
+    animation: fadeUp 0.45s ease both;
+  }
+
+  .card-question {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.35rem;
+    line-height: 1.4;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+  }
+
+  .card-hint {
+    font-size: 0.83rem;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 1.6rem;
+    line-height: 1.5;
+  }
+
+  /* ── Options ── */
+  .options { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .opt-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    text-align: left;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+  }
+
+  .opt-btn:hover {
+    border-color: var(--sea);
+    background: rgba(0,168,150,0.1);
+    transform: translateX(4px);
+  }
+
+  .opt-btn:active { transform: translateX(2px) scale(0.99); }
+
+  .opt-icon {
+    width: 32px; height: 32px; min-width: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    background: rgba(2,128,144,0.25);
+  }
+
+  .opt-text strong {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+  }
+  .opt-text span {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.45);
+  }
+
+  /* ── Breadcrumb ── */
+  .breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.4rem;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .crumb {
+    font-size: 0.72rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: 100px;
+    background: rgba(2,128,144,0.2);
+    color: var(--mint);
+    border: 1px solid rgba(2,195,154,0.25);
+  }
+
+  /* ── Back button ── */
+  .back-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; gap: 0.35rem;
+    margin-bottom: 1.2rem;
+    transition: color 0.2s;
+    padding: 0;
+  }
+  .back-btn:hover { color: var(--mint); }
+
+  /* ── Result card ── */
+  .result-card {
+    border-radius: var(--radius);
+    padding: 2.2rem 2.4rem;
+    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-card::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    opacity: 0.12;
+  }
+
+  .result-card.g1 { background: linear-gradient(135deg, #1a3d2b, #2D6A4F); border: 1.5px solid #52b788; }
+  .result-card.g1::before { background: #52b788; }
+  .result-card.g2 { background: linear-gradient(135deg, #0a2a35, var(--teal)); border: 1.5px solid var(--sea); }
+  .result-card.g2::before { background: var(--mint); }
+  .result-card.g3 { background: linear-gradient(135deg, #2a1f2d, #6D6875); border: 1.5px solid #c4b5c9; }
+  .result-card.g3::before { background: #c4b5c9; }
+
+  .result-group-badge {
+    display: inline-flex;
+    align-items: center; gap: 0.5rem;
+    background: rgba(255,255,255,0.12);
+    border-radius: 100px;
+    padding: 0.4rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .result-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    margin-bottom: 0.4rem;
+    position: relative; z-index: 1;
+  }
+
+  .result-norm {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 1.4rem;
+  }
+
+  .result-desc {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.88);
+    margin-bottom: 1.6rem;
+    position: relative; z-index: 1;
+  }
+
+  .result-tags {
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    margin-bottom: 1.8rem;
+  }
+
+  .tag {
+    font-size: 0.76rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 100px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* Case box */
+  .case-box {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1.5rem;
+    border-left: 3px solid var(--mint);
+  }
+  .case-box h4 {
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mint);
+    margin-bottom: 0.7rem;
+  }
+  .case-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .case-row:last-child { border-bottom: none; }
+  .case-row .key { color: rgba(255,255,255,0.55); }
+  .case-row .val { font-weight: 600; color: var(--white); }
+
+  /* Obligations */
+  .obligations { margin-bottom: 1.5rem; }
+  .obligations h4 {
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 0.7rem;
+  }
+  .ob-item {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    font-size: 0.88rem;
+    padding: 0.35rem 0;
+    color: rgba(255,255,255,0.82);
+  }
+  .ob-dot {
+    width: 6px; height: 6px; min-width: 6px;
+    border-radius: 50%;
+    background: var(--mint);
+    margin-top: 0.45rem;
+  }
+
+  /* Restart btn */
+  .restart-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    padding: 0.7rem 1.6rem;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .restart-btn:hover {
+    background: rgba(2,195,154,0.2);
+    border-color: var(--mint);
+  }
+
+  /* ── Tab nav ── */
+  .tab-nav {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 1.8rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 0.35rem;
+    animation: fadeDown 0.5s 0.1s ease both;
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.45);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.55rem 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.06); }
+
+  .tab-btn.active {
+    background: var(--teal);
+    color: var(--white);
+    font-weight: 600;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeUp 0.35s ease both; }
+
+  /* ── Info panel ── */
+  .info-panel {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: var(--radius);
+    padding: 1.5rem 2rem;
+  }
+
+  .info-panel h3 {
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 1rem;
+  }
+
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+  }
+
+  .group-mini {
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    font-size: 0.82rem;
+  }
+  .group-mini.g1 { background: rgba(45,106,79,0.25); border: 1px solid rgba(82,183,136,0.3); }
+  .group-mini.g2 { background: rgba(2,128,144,0.25); border: 1px solid rgba(2,168,150,0.4); }
+  .group-mini.g3 { background: rgba(109,104,117,0.25); border: 1px solid rgba(196,181,201,0.3); }
+
+  .group-mini strong { display: block; margin-bottom: 0.25rem; font-size: 0.9rem; }
+  .group-mini span { color: rgba(255,255,255,0.5); font-size: 0.78rem; }
+
+  /* ── Marco normativo ── */
+  .norm-section { margin-bottom: 1.6rem; }
+
+  .norm-section h4 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--white);
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .norm-section p {
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.7;
+    margin-bottom: 0.8rem;
+  }
+
+  .criteria-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.7rem;
+    margin-top: 0.8rem;
+  }
+
+  .crit-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+  }
+
+  .crit-card .crit-icon { font-size: 1.3rem; margin-bottom: 0.4rem; }
+  .crit-card .crit-name { font-size: 0.78rem; font-weight: 600; color: var(--mint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+  .crit-card .crit-val { font-size: 0.92rem; color: var(--white); font-weight: 600; margin-bottom: 0.25rem; }
+  .crit-card .crit-desc { font-size: 0.78rem; color: rgba(255,255,255,0.45); line-height: 1.5; }
+
+  .decree-list { margin-top: 0.8rem; }
+  .decree-item {
+    display: flex; align-items: flex-start; gap: 0.7rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.86rem;
+  }
+  .decree-item:last-child { border-bottom: none; }
+  .decree-num {
+    background: var(--teal);
+    color: var(--white);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    margin-top: 0.1rem;
+  }
+  .decree-item .d-text { color: rgba(255,255,255,0.7); line-height: 1.5; }
+  .decree-item .d-text strong { color: var(--white); display: block; }
+
+  /* ── Análisis técnico ── */
+  .analysis-header {
+    background: linear-gradient(135deg, rgba(2,128,144,0.3), rgba(2,195,154,0.15));
+    border: 1px solid rgba(2,168,150,0.3);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.4rem;
+  }
+  .analysis-header h4 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    margin-bottom: 0.3rem;
+  }
+  .analysis-header p { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+
+  .analysis-step {
+    display: flex; gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .step-num {
+    width: 28px; height: 28px; min-width: 28px;
+    border-radius: 50%;
+    background: var(--teal);
+    color: var(--white);
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 0.1rem;
+  }
+
+  .step-content {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    flex: 1;
+  }
+  .step-content .s-question { font-size: 0.78rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+  .step-content .s-answer { font-size: 0.95rem; color: var(--white); font-weight: 600; margin-bottom: 0.25rem; }
+  .step-content .s-reason { font-size: 0.82rem; color: rgba(255,255,255,0.55); line-height: 1.5; }
+  .step-content .s-result {
+    display: inline-block;
+    margin-top: 0.4rem;
+    background: rgba(2,195,154,0.2);
+    border: 1px solid rgba(2,195,154,0.4);
+    color: var(--mint);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+  }
+
+  .conclusion-box {
+    background: linear-gradient(135deg, rgba(2,128,144,0.25), rgba(2,195,154,0.1));
+    border: 1.5px solid var(--sea);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.6rem;
+    margin-top: 1.2rem;
+  }
+  .conclusion-box h4 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--mint);
+    margin-bottom: 0.7rem;
+  }
+  .conclusion-box p { font-size: 0.88rem; color: rgba(255,255,255,0.75); line-height: 1.75; }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    margin-top: 2.5rem;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.22);
+    line-height: 1.6;
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  @media (max-width: 600px) {
+    .groups-grid { grid-template-columns: 1fr; }
+    .card { padding: 1.4rem 1.2rem; }
+    .result-card { padding: 1.6rem 1.4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Header -->
+  <header>
+    <div class="badge">Herramienta de Clasificación · Etapa Analizar ABP</div>
+    <h1>¿En qué Grupo NIIF<br>clasifica <em>tu empresa</em>?</h1>
+    <p class="subtitle">Marco Técnico Normativo · Decreto 2420 de 2015 y modificatorios</p>
+  </header>
+
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <div class="step-label" id="stepLabel">Pregunta 1 de 5</div>
+
+  <!-- Tab navigation -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('clasificador')">🎯 Clasificador</button>
+    <button class="tab-btn" onclick="switchTab('normativo')">📋 Marco Normativo</button>
+    <button class="tab-btn" onclick="switchTab('analisis')">🏥 Análisis Técnico</button>
+  </nav>
+
+  <!-- TAB 1: Clasificador -->
+  <div class="tab-panel active" id="tab-clasificador">
+    <div id="app"></div>
+    <div class="info-panel" id="infoPanel" style="margin-top:2rem; animation: fadeUp 0.5s 0.2s ease both;">
+      <h3>Referencia rápida · Grupos NIIF en Colombia</h3>
+      <div class="groups-grid">
+        <div class="group-mini g1">
+          <strong>Grupo 1 — NIIF Plenas</strong>
+          <span>Entidades de interés público, emisoras de valores, sector financiero vigilado, grandes empresas.</span>
+        </div>
+        <div class="group-mini g2">
+          <strong>Grupo 2 — NIIF Pymes</strong>
+          <span>Medianas y pequeñas empresas no clasificadas en Grupo 1 ni Grupo 3.</span>
+        </div>
+        <div class="group-mini g3">
+          <strong>Grupo 3 — Marco Simplificado</strong>
+          <span>Microempresas: activos &lt; 500 SMMLV, &lt; 10 empleados o ingresos &lt; 6.000 UVT.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: Marco Normativo -->
+  <div class="tab-panel" id="tab-normativo">
+    <div class="card">
+
+      <div class="norm-section">
+        <h4>¿Qué son los Grupos NIIF en Colombia?</h4>
+        <p>Colombia adoptó las Normas Internacionales de Información Financiera (NIIF) mediante la Ley 1314 de 2009, reglamentada por el Decreto Único 2420 de 2015. Para facilitar su aplicación según el tamaño y naturaleza de cada empresa, se crearon tres grupos con marcos normativos diferenciados. No se trata de una jerarquía de calidad, sino de niveles de complejidad ajustados a la realidad de cada tipo de organización.</p>
+      </div>
+
+      <div class="norm-section">
+        <h4>Variables clave para la clasificación</h4>
+        <p>La normativa establece cuatro criterios principales que determinan en qué grupo cae una empresa. Es importante analizarlos en conjunto y en el orden correcto, ya que el cumplimiento de uno solo puede ser suficiente para pertenecer a un grupo determinado.</p>
+        <div class="criteria-grid">
+          <div class="crit-card">
+            <div class="crit-icon">💰</div>
+            <div class="crit-name">Ingresos</div>
+            <div class="crit-val">Umbral Microempresa: &lt; 6.000 UVT/año</div>
+            <div class="crit-desc">≈ $289 millones COP (2025). Si supera este monto, la empresa no puede ser Grupo 3 independiente del número de empleados.</div>
+          </div>
+          <div class="crit-card">
+            <div class="crit-icon">🏗️</div>
+            <div class="crit-name">Activos Totales</div>
+            <div class="crit-val">Microempresa: &lt; 500 SMMLV</div>
+            <div class="crit-desc">≈ $650 millones COP (2025). Para Grupo 1 por tamaño: &gt; 30.000 SMMLV ≈ $39.000 millones.</div>
+          </div>
+          <div class="crit-card">
+            <div class="crit-icon">👥</div>
+            <div class="crit-name">Número de Empleados</div>
+            <div class="crit-val">Micro: &lt;10 · Pequeña: 11–50 · Med: 51–200</div>
+            <div class="crit-desc">Trabajadores vinculados directamente. Las empresas con más de 200 empleados Y activos &gt; 30.000 SMMLV son de interés público.</div>
+          </div>
+          <div class="crit-card">
+            <div class="crit-icon">🏛️</div>
+            <div class="crit-name">Interés Público</div>
+            <div class="crit-val">Automaticamente Grupo 1</div>
+            <div class="crit-desc">Bancos, aseguradoras, fondos de pensiones, emisoras de valores en bolsa, empresas vigiladas por la SFC o Supersalud en algunas condiciones.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="norm-section">
+        <h4>Normativa aplicable por Grupo</h4>
+        <div class="decree-list">
+          <div class="decree-item">
+            <span class="decree-num">G1</span>
+            <div class="d-text">
+              <strong>NIIF Plenas — Decreto 2784/2012 · Anexo 1 del D. 2420/2015</strong>
+              Aplica las 41 normas IFRS completas emitidas por el IASB. Requiere máximo nivel de revelación, estados financieros comparativos, y auditoría externa obligatoria.
+            </div>
+          </div>
+          <div class="decree-item">
+            <span class="decree-num">G2</span>
+            <div class="d-text">
+              <strong>NIIF para Pymes — Decreto 3022/2013 · Anexo 2 del D. 2420/2015</strong>
+              Versión simplificada del IASB con 35 secciones. Aplica a la gran mayoría de empresas privadas colombianas. Requiere 5 estados financieros básicos y notas.
+            </div>
+          </div>
+          <div class="decree-item">
+            <span class="decree-num">G3</span>
+            <div class="d-text">
+              <strong>Marco Simplificado — Decreto 2706/2012 · Anexo 3 del D. 2420/2015</strong>
+              Marco contable básico para microempresas. Estados financieros abreviados, política contable simplificada y mínimas notas de revelación.
+            </div>
+          </div>
+          <div class="decree-item">
+            <span class="decree-num">BASE</span>
+            <div class="d-text">
+              <strong>Ley 1314/2009 · Decreto Único 2420/2015 · Decreto 957/2019</strong>
+              Marco legal general de la convergencia contable en Colombia. El Decreto 957/2019 actualiza los criterios de clasificación de MiPymes por sector económico e ingresos.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TAB 3: Análisis Técnico -->
+  <div class="tab-panel" id="tab-analisis">
+    <div class="card">
+
+      <div class="analysis-header">
+        <h4>🏥 Caso Aplicado: Agrupasalud IPS S.A.S.</h4>
+        <p>Aplicación paso a paso de los criterios normativos del Decreto 2420/2015 para determinar el Grupo NIIF correspondiente.</p>
+      </div>
+
+      <div class="analysis-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="s-question">Pregunta 1 · ¿Es entidad vigilada por la SFC o emisora de valores?</div>
+          <div class="s-answer">No</div>
+          <div class="s-reason">Agrupasalud IPS S.A.S. es una IPS privada del sector salud. No capta ahorros del público, no cotiza en la Bolsa de Valores de Colombia (BVC) y no está bajo vigilancia de la Superintendencia Financiera. Su ente supervisor es la Superintendencia Nacional de Salud (SNS), pero en su calidad de habilitadora de servicios, no como entidad financiera.</div>
+          <span class="s-result">→ No aplica Grupo 1 por esta vía</span>
+        </div>
+      </div>
+
+      <div class="analysis-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="s-question">Pregunta 2 · ¿Cumple criterios de interés público por tamaño?</div>
+          <div class="s-answer">No</div>
+          <div class="s-reason">Para ser clasificada de interés público por tamaño, una empresa debe superar simultáneamente los 200 empleados Y los 30.000 SMMLV en activos (≈ $39.000 millones COP en 2025). Agrupasalud cuenta con aproximadamente 50 empleados y un patrimonio neto de $1.944 millones COP, muy por debajo de ambos umbrales.</div>
+          <span class="s-result">→ No aplica Grupo 1 por tamaño</span>
+        </div>
+      </div>
+
+      <div class="analysis-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="s-question">Pregunta 3 · ¿Cuántos empleados tiene?</div>
+          <div class="s-answer">~50 empleados (2024)</div>
+          <div class="s-reason">Con 50 trabajadores vinculados, Agrupasalud se ubica en el rango de pequeña-mediana empresa (entre 10 y 200 empleados). Este dato descarta automáticamente la categoría de microempresa por personal, aunque aún es necesario evaluar los ingresos para confirmar que no aplica Grupo 3.</div>
+          <span class="s-result">→ Rango: Pequeña/Mediana empresa</span>
+        </div>
+      </div>
+
+      <div class="analysis-step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="s-question">Pregunta 4 · ¿Los ingresos superan 6.000 UVT anuales?</div>
+          <div class="s-answer">Sí — Ingresos entre $2.000M y $5.000M COP (2019)</div>
+          <div class="s-reason">El umbral de microempresa por ingresos es 6.000 UVT ≈ $289 millones COP en 2025. Agrupasalud IPS reportó ingresos entre $2.000 millones y $5.000 millones COP, lo que equivale a más de 40 veces el límite de microempresa. Esto confirma que no puede clasificarse en Grupo 3. Adicionalmente, sus ingresos crecieron un 78,93% en 2023, reforzando su escala de mediana empresa.</div>
+          <span class="s-result">→ Supera ampliamente el umbral de microempresa</span>
+        </div>
+      </div>
+
+      <div class="analysis-step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="s-question">Verificación final · ¿Aplica Grupo 3?</div>
+          <div class="s-answer">No aplica Grupo 3</div>
+          <div class="s-reason">Para ser Grupo 3, la empresa debe cumplir todos los criterios de microempresa: menos de 10 empleados Y activos menores a 500 SMMLV Y/O ingresos menores a 6.000 UVT. Agrupasalud no cumple ninguno de estos tres criterios, por lo que queda descartado el marco simplificado.</div>
+          <span class="s-result">→ Descartado Grupo 3</span>
+        </div>
+      </div>
+
+      <div class="conclusion-box">
+        <h4>✅ Conclusión: Grupo 2 — NIIF para Pymes</h4>
+        <p>Agrupasalud IPS S.A.S. debe aplicar el marco técnico normativo del <strong>Grupo 2</strong>, establecido en el Decreto 3022 de 2013 e incorporado como Anexo 2 del Decreto Único 2420 de 2015. Esta conclusión se sustenta en que la empresa es de naturaleza privada, no es de interés público, no está bajo vigilancia de la SFC, cuenta con aproximadamente 50 empleados y genera ingresos que superan ampliamente los umbrales de microempresa. El rol del Contador Público en este caso es fundamental: debe aplicar las 35 secciones de las NIIF para Pymes, diseñar políticas contables acordes, y garantizar que los estados financieros reflejen la realidad económica de la IPS con el nivel de revelación que exige este estándar.</p>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<footer>
+  Universidad de la Costa · Contaduría Pública · CIA: Entorno Empresarial y Contable · 2026<br>
+  Basado en Decreto 2420/2015, Decreto 2496/2015, Decreto 957/2019 y Ley 590/2000
+</footer>
+
+<script>
+// ─────────────────────────────────────────────────────────
+// ÁRBOL DE DECISIÓN
+// ─────────────────────────────────────────────────────────
+const tree = {
+  id: 'q1',
+  question: '¿La empresa está vigilada por la Superintendencia Financiera o es emisora de valores en el mercado público?',
+  hint: 'Ej: bancos, aseguradoras, fondos de pensiones, empresas en bolsa (BVC).',
+  options: [
+    {
+      icon: '🏦', label: 'Sí', desc: 'Es entidad financiera, aseguradora o cotiza en bolsa.',
+      crumb: 'Vigilada por SFC o emisora',
+      next: 'GRUPO1'
+    },
+    {
+      icon: '🏥', label: 'No', desc: 'No pertenece al sector financiero ni cotiza en bolsa.',
+      crumb: 'No vigilada SFC',
+      next: {
+        id: 'q2',
+        question: '¿La empresa pertenece a alguna de estas categorías de interés público?',
+        hint: 'Entidades que captan ahorro del público, servicios públicos domiciliarios grandes, o tienen más de 200 empleados Y activos superiores a 30.000 SMMLV.',
+        options: [
+          {
+            icon: '⚡', label: 'Sí', desc: 'Capta ahorro, presta servicios públicos a gran escala, o supera los umbrales.',
+            crumb: 'Interés público',
+            next: 'GRUPO1'
+          },
+          {
+            icon: '🏪', label: 'No', desc: 'No cumple ninguna de esas condiciones.',
+            crumb: 'No interés público',
+            next: {
+              id: 'q3',
+              question: '¿Cuántos empleados tiene la empresa?',
+              hint: 'Cuenta todos los trabajadores vinculados (directos + contrato laboral vigente).',
+              options: [
+                {
+                  icon: '👤', label: 'Menos de 10 empleados',
+                  desc: 'Escala muy pequeña, posible microempresa.',
+                  crumb: 'Menos de 10 empleados',
+                  next: {
+                    id: 'q4a',
+                    question: '¿Los activos totales son inferiores a 500 SMMLV?',
+                    hint: '500 SMMLV en 2025 ≈ $650.000.000 COP. Revisa el balance de la empresa.',
+                    options: [
+                      {
+                        icon: '✅', label: 'Sí, activos < 500 SMMLV',
+                        desc: 'Activos totales por debajo del umbral de microempresa.',
+                        crumb: 'Activos < 500 SMMLV',
+                        next: 'GRUPO3'
+                      },
+                      {
+                        icon: '📈', label: 'No, activos ≥ 500 SMMLV',
+                        desc: 'Los activos superan el límite de microempresa.',
+                        crumb: 'Activos ≥ 500 SMMLV',
+                        next: 'GRUPO2'
+                      }
+                    ]
+                  }
+                },
+                {
+                  icon: '👥', label: 'Entre 10 y 200 empleados',
+                  desc: 'Rango de pequeña o mediana empresa.',
+                  crumb: '10–200 empleados',
+                  next: {
+                    id: 'q4b',
+                    question: '¿Los ingresos brutos anuales superan 6.000 UVT?',
+                    hint: '6.000 UVT en 2025 ≈ $289.098.000 COP. Si supera ese monto, ya no es microempresa.',
+                    options: [
+                      {
+                        icon: '✅', label: 'Sí, ingresos > 6.000 UVT',
+                        desc: 'Supera el umbral de microempresa por ingresos.',
+                        crumb: 'Ingresos > 6.000 UVT',
+                        next: 'GRUPO2'
+                      },
+                      {
+                        icon: '📊', label: 'No, ingresos ≤ 6.000 UVT',
+                        desc: 'Los ingresos están dentro del rango de microempresa.',
+                        crumb: 'Ingresos ≤ 6.000 UVT',
+                        next: 'GRUPO3'
+                      }
+                    ]
+                  }
+                },
+                {
+                  icon: '🏢', label: 'Más de 200 empleados',
+                  desc: 'Empresa grande en términos de personal.',
+                  crumb: 'Más de 200 empleados',
+                  next: {
+                    id: 'q4c',
+                    question: '¿Los activos totales superan 30.000 SMMLV?',
+                    hint: '30.000 SMMLV en 2025 ≈ $39.000.000.000 COP. Este es el umbral de interés público por tamaño.',
+                    options: [
+                      {
+                        icon: '🏛️', label: 'Sí, activos > 30.000 SMMLV',
+                        desc: 'Cumple criterio de interés público por tamaño.',
+                        crumb: 'Activos > 30.000 SMMLV',
+                        next: 'GRUPO1'
+                      },
+                      {
+                        icon: '🏭', label: 'No, activos ≤ 30.000 SMMLV',
+                        desc: 'No alcanza el umbral de interés público.',
+                        crumb: 'Activos ≤ 30.000 SMMLV',
+                        next: 'GRUPO2'
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+};
+
+const results = {
+  GRUPO1: {
+    group: 'g1',
+    label: 'Grupo 1',
+    title: 'NIIF Plenas',
+    norm: 'Decreto 2784 de 2012 · Anexo 1 del Decreto 2420/2015',
+    desc: 'La empresa debe aplicar las Normas Internacionales de Información Financiera completas (NIIF/IFRS). Esto implica el mayor nivel de revelación y precisión contable, con estados financieros comparativos y notas extensas.',
+    tags: ['IFRS completas', 'Alta complejidad', 'Interés público', 'Supervisión SFC/SS'],
+    obligations: [
+      'Estados Financieros con estructura NIIF completa (balance, resultados, flujo de caja, cambios en patrimonio)',
+      'Notas revelatorias completas según cada norma aplicable',
+      'Auditoría externa obligatoria por revisor fiscal',
+      'Reporte a ente supervisor (SFC, SS o SNS)',
+      'Política contable detallada aprobada por junta'
+    ],
+    showCase: false
+  },
+  GRUPO2: {
+    group: 'g2',
+    label: 'Grupo 2',
+    title: 'NIIF para Pymes',
+    norm: 'Decreto 3022 de 2013 · Anexo 2 del Decreto 2420/2015',
+    desc: 'La empresa aplica la versión simplificada de las NIIF diseñada específicamente para medianas y pequeñas empresas. Es el marco más común en Colombia para empresas como Agrupasalud IPS S.A.S.',
+    tags: ['NIIF Pymes', 'Mediana complejidad', 'Empresa privada', '35 secciones IASB'],
+    obligations: [
+      'Estado de Situación Financiera (Balance General)',
+      'Estado de Resultados Integral (o Resultados + Otro Resultado Integral)',
+      'Estado de Cambios en el Patrimonio',
+      'Estado de Flujos de Efectivo',
+      'Notas a los estados financieros',
+      'Política contable bajo el estándar de 35 secciones NIIF Pymes'
+    ],
+    showCase: true
+  },
+  GRUPO3: {
+    group: 'g3',
+    label: 'Grupo 3',
+    title: 'Marco Simplificado',
+    norm: 'Decreto 2706 de 2012 · Anexo 3 del Decreto 2420/2015',
+    desc: 'La empresa aplica el marco de información financiera simplificado para microempresas. Es el nivel básico de contabilidad, con estados financieros abreviados y menos requisitos de revelación.',
+    tags: ['Microempresa', 'Baja complejidad', 'Marco simplificado', 'RUT + registros básicos'],
+    obligations: [
+      'Estado de Situación Financiera simplificado',
+      'Estado de Resultados simplificado',
+      'Notas mínimas requeridas',
+      'Libro de contabilidad simplificado',
+      'Declaraciones tributarias básicas'
+    ],
+    showCase: false
+  }
+};
+
+// ─────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────
+let history = [];      // stack of nodes visited
+let breadcrumbs = [];  // user-readable trail
+let currentNode = tree;
+const TOTAL_STEPS = 5;
+
+function countDepth(node) {
+  // rough step counter
+  return breadcrumbs.length + 1;
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────
+function render() {
+  updateProgress();
+
+  if (typeof currentNode === 'string') {
+    renderResult(currentNode);
+    return;
+  }
+  renderQuestion(currentNode);
+}
+
+function updateProgress() {
+  const total = TOTAL_STEPS;
+  const current = Math.min(breadcrumbs.length, total);
+  const pct = (current / total) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+
+  if (typeof currentNode === 'string') {
+    document.getElementById('stepLabel').textContent = '✓ Clasificación completada';
+    const ip = document.getElementById('infoPanel');
+    if (ip) ip.style.display = 'none';
+  } else {
+    document.getElementById('stepLabel').textContent = `Pregunta ${current + 1} de ${total}`;
+    const ip = document.getElementById('infoPanel');
+    if (ip) ip.style.display = breadcrumbs.length === 0 ? 'block' : 'none';
+  }
+}
+
+function renderQuestion(node) {
+  const app = document.getElementById('app');
+
+  let html = '';
+
+  // Breadcrumb
+  if (breadcrumbs.length > 0) {
+    html += '<div class="breadcrumb">';
+    breadcrumbs.forEach(c => {
+      html += `<span class="crumb">${c}</span>`;
+    });
+    html += '</div>';
+    html += `<button class="back-btn" onclick="goBack()">← Volver</button>`;
+  }
+
+  // Question card
+  html += `<div class="card">
+    <p class="card-question">${node.question}</p>
+    <p class="card-hint">${node.hint}</p>
+    <div class="options">`;
+
+  node.options.forEach((opt, i) => {
+    html += `
+      <button class="opt-btn" onclick="choose(${i})">
+        <div class="opt-icon">${opt.icon}</div>
+        <div class="opt-text">
+          <strong>${opt.label}</strong>
+          <span>${opt.desc}</span>
+        </div>
+      </button>`;
+  });
+
+  html += `</div></div>`;
+  app.innerHTML = html;
+}
+
+function renderResult(groupKey) {
+  const r = results[groupKey];
+  const app = document.getElementById('app');
+
+  let html = `<button class="back-btn" onclick="goBack()">← Volver</button>`;
+
+  html += `<div class="result-card ${r.group}">
+    <div class="result-group-badge">🎯 ${r.label}</div>
+    <div class="result-title">${r.title}</div>
+    <div class="result-norm">📋 ${r.norm}</div>
+    <p class="result-desc">${r.desc}</p>
+    <div class="result-tags">`;
+
+  r.tags.forEach(t => {
+    html += `<span class="tag">${t}</span>`;
+  });
+  html += `</div>`;
+
+  // Case applied (only for Grupo 2 = Agrupasalud)
+  if (r.showCase) {
+    html += `<div class="case-box">
+      <h4>📌 Caso aplicado · Agrupasalud IPS S.A.S.</h4>
+      <div class="case-row"><span class="key">Empresa</span><span class="val">Centro de Salud-Agrupasalud IPS S.A.S.</span></div>
+      <div class="case-row"><span class="key">NIT</span><span class="val">802022775</span></div>
+      <div class="case-row"><span class="key">Empleados</span><span class="val">~50 (2024)</span></div>
+      <div class="case-row"><span class="key">Ingresos (2019)</span><span class="val">Entre $2.000M y $5.000M COP</span></div>
+      <div class="case-row"><span class="key">Patrimonio neto</span><span class="val">$1.944.541.000 COP</span></div>
+      <div class="case-row"><span class="key">Naturaleza</span><span class="val">Privada · S.A.S. · No vigilada SFC</span></div>
+      <div class="case-row"><span class="key">Resultado</span><span class="val">✅ Grupo 2 — NIIF para Pymes</span></div>
+    </div>`;
+  }
+
+  html += `<div class="obligations">
+    <h4>Obligaciones contables principales</h4>`;
+  r.obligations.forEach(ob => {
+    html += `<div class="ob-item"><div class="ob-dot"></div>${ob}</div>`;
+  });
+  html += `</div>`;
+
+  html += `<button class="restart-btn" onclick="restart()">↺ Clasificar otra empresa</button>`;
+  html += `</div>`;
+
+  app.innerHTML = html;
+}
+
+// ─────────────────────────────────────────────────────────
+// TAB SWITCHING
+// ─────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.currentTarget.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─────────────────────────────────────────────────────────
+// ACTIONS
+// ─────────────────────────────────────────────────────────
+function choose(index) {
+  const opt = currentNode.options[index];
+  history.push(currentNode);
+  breadcrumbs.push(opt.crumb);
+  currentNode = opt.next;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBack() {
+  if (history.length === 0) return;
+  currentNode = history.pop();
+  breadcrumbs.pop();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restart() {
+  history = [];
+  breadcrumbs = [];
+  currentNode = tree;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
